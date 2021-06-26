@@ -22,10 +22,13 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --no-restore -o BuildArtifact
 
-    - name: Upload Artifacts
+    - name: Upload Build Artifacts
       uses: actions/upload-artifact@v2
+      with:
+        name: BuildArtifact
+        path: BuildArtifact
 
     - name: Test
       run: dotnet test --no-build --verbosity normal
@@ -45,11 +48,19 @@ jobs:
       env:
         NUGET_AUTH_TOKEN: ${{secrets.NUGET_KEY}}        
         
-    - name: Download Artifacts
+    - name: Download Build Artifacts
       uses: actions/download-artifact@v2
+      with:
+        name: BuildArtifact
 
-    - name: Build solution and generate NuGet package
-      run: dotnet pack -o out
+    - name: Generate NuGet Package
+      run: dotnet pack -o NugetArtifacts
 
-    - name: Push generated package to GitHub registry
-      run: dotnet nuget push ./<project>/out/*.nupkg --skip-duplicate --no-symbols true
+    - name: Upload Nuget Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: NugetArtifacts
+        path: NugetArtifacts
+
+    - name: Push Nuget
+      run: dotnet nuget push ./<project>/NugetArtifacts/*.nupkg --skip-duplicate --no-symbols true
